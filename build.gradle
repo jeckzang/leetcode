@@ -1,0 +1,91 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "se.transmode.gradle:gradle-docker:1.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.31"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:1.4.5.RELEASE"
+    }
+}
+
+group = 'jeckzang'
+
+ext {
+    projectBaseName = 'leetcode-cases'
+    artifactVersion = '1.0.0'
+    cxfVersion = '3.1.16'
+    springVersion = '4.3.7.RELEASE'
+    springBootVersion='1.4.5.RELEASE'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.10.2'
+    // Get the "all" version so that it includes the source so that we can hook up gradle source
+    // so that F3 will work for looking at Gradle API classes in the buildSrc project.
+    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+
+allprojects {
+    version = project.getProperty("artifactVersion")
+
+    apply plugin: 'kotlin'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: "io.spring.dependency-management"
+    apply plugin: 'java'
+    apply plugin: 'docker'
+    task buildDocker(type: Docker, dependsOn: build) {
+        //push = true
+        applicationName = jar.baseName
+        dockerfile = file('src/main/docker/Dockerfile')
+        doFirst {
+            copy {
+                from jar,"src/main/docker/entrypoint.sh"
+                into stageDir
+            }
+        }
+    }
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    ext {
+        springVersion = '4.3.7.RELEASE'
+        springBootVersion = '1.4.5.RELEASE'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.SR7"
+        }
+    }
+
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.31"
+    }
+
+    jar {
+        baseName = projectBaseName
+        version = ''
+        manifest {
+            attributes 'Main-Class': 'com.polycom.tester.redis.TesterKt'
+        }
+    }
+
+}
+
+
+
