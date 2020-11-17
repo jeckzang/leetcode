@@ -8,7 +8,7 @@ import (
 
 func TestFourSum(t *testing.T) {
 	data := map[int][]int{
-		6189: []int{-493, -482, -482, -456, -427, -405, -392, -385, -351, -269, -259, -251, -235, -235, -202, -201, -194, -189, -187, -186, -180, -177, -175, -156, -150, -147, -140, -122, -112, -112, -105, -98, -49, -38, -35, -34, -18, 20, 52, 53, 57, 76, 124, 126, 128, 132, 142, 147, 157, 180, 207, 227, 274, 296, 311, 334, 336, 337, 339, 349, 354, 363, 372, 378, 383, 413, 431, 471, 474, 481, 492},
+		-14: []int{2, -4, -5, -2, -3, -5, 0, 4, -2},
 	}
 	values := map[int][][]int{
 		0: [][]int{[]int{-2, -1, 1, 2}, []int{-2, 0, 0, 2}, []int{-1, 0, 0, 1}},
@@ -63,42 +63,18 @@ func fourSum(nums []int, target int) [][]int {
 	if l == 0 {
 		return [][]int{}
 	}
-	// sort.Ints(nums)
+	sort.Ints(nums)
 	v := [][]int{}
-	// cache := map[string]bool{}
 	for i := 0; i < l; i++ {
-		for j := 0; j < l; j++ {
-			if j == i {
-				j++
-			}
-			if j >= l {
-				continue
-			}
-			for x := 0; x < l; x++ {
-				for ; eqij(i, j, x); x++ {
-
-				}
-				if x >= l {
-					continue
-				}
-				for y := 0; y < l; y++ {
-					for ; eqijx(i, j, x, y); y++ {
-
-					}
-					if y >= l {
-						continue
-					}
-					tv := []int{nums[i], nums[j], nums[x], nums[y]}
-					sort.Ints(tv)
-					// cKey := strconv.Itoa(tv[0]) + "_" + strconv.Itoa(tv[1]) + "_" + strconv.Itoa(tv[2]) + "_" + strconv.Itoa(tv[3])
-					// if _, ok := cache[cKey]; ok {
-					// 	continue
-					// }
-					if test(tv[0], tv[1], tv[2], tv[3], v, tv, target) {
+		for j := i + 1; j < l; j++ {
+			for x := j + 1; x < l; x++ {
+				for y := x + 1; y < l; y++ {
+					ok, tv, bigger := test(nums[i], nums[j], nums[x], nums[y], v, target)
+					if ok {
 						v = append(v, tv)
-						// cache[cKey] = true
-					} else {
-						// cache[cKey] = false
+					}
+					if bigger {
+						break
 					}
 				}
 			}
@@ -107,46 +83,48 @@ func fourSum(nums []int, target int) [][]int {
 	return v
 }
 
-func eqij(i int, j int, c int) bool {
-	if i == c {
-		return true
-	}
-	if j == c {
-		return true
-	}
-	return false
-}
-
-func eqijx(i int, j int, x int, c int) bool {
-	if i == c {
-		return true
-	}
-	if j == c {
-		return true
-	}
-	if x == c {
-		return true
-	}
-	return false
-}
-
-func test(i int, j int, x int, y int, a [][]int, v []int, t int) bool {
+func test(i int, j int, x int, y int, a [][]int, t int) (bool, []int, bool) {
 	if (i + j + x + y) == t {
+		v := []int{i, j, x, y}
 		for _, at := range a {
 			if intEq(at, v) {
-				return false
+				return false, nil, false
 			}
 		}
-		return true
+		return true, v, false
+	} else if (i + j + x + y) > t {
+		return false, nil, true
 	}
-	return false
+	return false, nil, false
 }
 
 func intEq(a []int, b []int) bool {
+	t := []int{}
+	wrong := 0
 	for i := 0; i < 4; i++ {
-		if a[i] != b[i] {
-			return false
+		for j := 0; j < 4; j++ {
+			var found = false
+			for x := 0; x < len(t); x++ {
+				if j == t[x] {
+					found = true
+					break
+				}
+			}
+			if found {
+				continue
+			}
+			if a[i] == b[j] {
+				t = append(t, j)
+				break
+			} else if i > 2 && wrong > 2 {
+				return false
+			} else {
+				wrong++
+			}
 		}
 	}
-	return true
+	if len(t) == 4 {
+		return true
+	}
+	return false
 }
